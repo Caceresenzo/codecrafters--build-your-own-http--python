@@ -12,10 +12,22 @@ def main():
     parts = request_line.split(" ")
     method, path, version = parts
 
+    headers = {}
+    while line := io.readline()[:-2].decode("ascii"):
+        key, value = line.split(": ")
+        headers[key.lower()] = value
+
     if path == "/":
         client.send(b"HTTP/1.1 200 OK\r\n\r\n")
     elif path.startswith("/echo/"):
         message = path[6:]
+        client.send(b"HTTP/1.1 200 OK\r\n")
+        client.send(b"Content-Type: text/plain\r\n")
+        client.send(f"Content-Length: {len(message)}\r\n".encode("ascii"))
+        client.send(b"\r\n")
+        client.send(message.encode("ascii"))
+    elif path == "/user-agent":
+        message = headers["User-Agent".lower()]
         client.send(b"HTTP/1.1 200 OK\r\n")
         client.send(b"Content-Type: text/plain\r\n")
         client.send(f"Content-Length: {len(message)}\r\n".encode("ascii"))
