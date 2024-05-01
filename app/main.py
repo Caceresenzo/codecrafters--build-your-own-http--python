@@ -1,6 +1,6 @@
 import os
-import sys
 import socket
+import sys
 
 STATUS_PHRASES = {
     200: "OK",
@@ -10,6 +10,11 @@ STATUS_PHRASES = {
 
 def main():
     print("codecrafters build-your-own-http")
+    
+    directory = None
+    if len(sys.argv) == 3:
+        directory = sys.argv[2]
+        os.chdir(directory)
 
     server = socket.create_server(("0.0.0.0", 4221), reuse_port=True)
     while True:
@@ -56,6 +61,24 @@ def main():
                 },
                 message.encode("ascii")
             )
+        elif path.startswith("/files/"):
+            name = path[7:]
+
+            if os.path.exists(name):
+                size = os.stat(name).st_size
+                with open(name, "rb") as fd:
+                    content = fd.read()
+                
+                response = (
+                    200,
+                    {
+                        "Content-Type": "application/octet-stream",
+                        "Content-Length": str(size),
+                    },
+                    content
+                )
+            else:
+                response = 404, {}, None
         else:
             response = 404, {}, None
 
