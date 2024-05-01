@@ -14,6 +14,13 @@ def main():
 
     if path == "/":
         client.send(b"HTTP/1.1 200 OK\r\n\r\n")
+    elif path.startswith("/echo/"):
+        message = path[6:]
+        client.send(b"HTTP/1.1 200 OK\r\n")
+        client.send(b"Content-Type: text/plain\r\n")
+        client.send(f"Content-Length: {len(message)}\r\n".encode("ascii"))
+        client.send(b"\r\n")
+        client.send(message.encode("ascii"))
     else:
         client.send(b"HTTP/1.1 404 Not Found\r\n\r\n")
 
