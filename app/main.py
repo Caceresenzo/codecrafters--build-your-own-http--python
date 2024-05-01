@@ -24,6 +24,7 @@ def main():
 
         pid = os.fork()
         if pid:
+            client.close()
             continue
 
         io = socket.SocketIO(client, "rw")
@@ -36,7 +37,7 @@ def main():
         while line := io.readline()[:-2].decode("ascii"):
             key, value = line.split(": ")
             headers[key.lower()] = value
-
+        
         if path == "/":
             response = 200, {}, None
         elif path.startswith("/echo/"):
