@@ -4,13 +4,14 @@ import sys
 
 STATUS_PHRASES = {
     200: "OK",
+    201: "Created",
     404: "Not Found"
 }
 
 
 def main():
     print("codecrafters build-your-own-http")
-    
+
     directory = None
     if len(sys.argv) == 3:
         directory = sys.argv[2]
@@ -37,7 +38,12 @@ def main():
         while line := io.readline()[:-2].decode("ascii"):
             key, value = line.split(": ")
             headers[key.lower()] = value
-        
+
+        body = None
+        if is_post := (method == "POST"):
+            content_length = int(headers.get("Content-Length".lower(), 0))
+            body = io.read(content_length)
+
         if path == "/":
             response = 200, {}, None
         elif path.startswith("/echo/"):
@@ -65,11 +71,20 @@ def main():
         elif path.startswith("/files/"):
             name = path[7:]
 
-            if os.path.exists(name):
+            if is_post:
+                parent = os.path.dirname(name)
+                if parent:
+                    os.makedirs(parent, exist_ok=True)
+
+                with open(name, "wb") as fd:
+                    fd.write(body)
+
+                response = 201, {}, None
+            elif os.path.exists(name):
                 size = os.stat(name).st_size
                 with open(name, "rb") as fd:
                     content = fd.read()
-                
+
                 response = (
                     200,
                     {
