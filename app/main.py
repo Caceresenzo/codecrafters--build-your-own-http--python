@@ -5,14 +5,14 @@ import socket
 def main():
     print("codecrafters build-your-own-http")
 
+    server = socket.create_server(("0.0.0.0", 4221), reuse_port=True)
     while True:
-        server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
-        client, addr = server_socket.accept()
+        client, addr = server.accept()
 
         print("connected", addr)
 
         pid = os.fork()
-        if pid != 0:
+        if pid:
             continue
 
         io = socket.SocketIO(client, "rw")
