@@ -1,5 +1,11 @@
 import os
+import sys
 import socket
+
+STATUS_PHRASES = {
+    200: "OK",
+    404: "Not Found"
+}
 
 
 def main():
@@ -27,26 +33,46 @@ def main():
             headers[key.lower()] = value
 
         if path == "/":
-            client.send(b"HTTP/1.1 200 OK\r\n\r\n")
+            response = 200, {}, None
         elif path.startswith("/echo/"):
             message = path[6:]
-            client.send(b"HTTP/1.1 200 OK\r\n")
-            client.send(b"Content-Type: text/plain\r\n")
-            client.send(f"Content-Length: {len(message)}\r\n".encode("ascii"))
-            client.send(b"\r\n")
-            client.send(message.encode("ascii"))
+
+            response = (
+                200,
+                {
+                    "Content-Type": "text/plain",
+                    "Content-Length": str(len(message)),
+                },
+                message.encode("ascii")
+            )
         elif path == "/user-agent":
             message = headers["User-Agent".lower()]
-            client.send(b"HTTP/1.1 200 OK\r\n")
-            client.send(b"Content-Type: text/plain\r\n")
-            client.send(f"Content-Length: {len(message)}\r\n".encode("ascii"))
-            client.send(b"\r\n")
-            client.send(message.encode("ascii"))
+
+            response = (
+                200,
+                {
+                    "Content-Type": "text/plain",
+                    "Content-Length": str(len(message)),
+                },
+                message.encode("ascii")
+            )
         else:
-            client.send(b"HTTP/1.1 404 Not Found\r\n\r\n")
+            response = 404, {}, None
+
+        status, headers, body = response
+        phrase = STATUS_PHRASES[status]
+
+        client.send(f"HTTP/1.1 {status} {phrase}\r\n".encode("ascii"))
+        for key, value in headers.items():
+            client.send(f"{key}: {value}\r\n".encode("ascii"))
+        client.send(b"\r\n")
+
+        if body is not None:
+            client.send(body)
 
         client.close()
         exit(0)
+
 
 if __name__ == "__main__":
     main()
