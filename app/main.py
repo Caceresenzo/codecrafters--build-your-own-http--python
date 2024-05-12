@@ -53,7 +53,6 @@ def main():
                 200,
                 {
                     "Content-Type": "text/plain",
-                    "Content-Length": str(len(message)),
                 },
                 message.encode("ascii")
             )
@@ -64,7 +63,6 @@ def main():
                 200,
                 {
                     "Content-Type": "text/plain",
-                    "Content-Length": str(len(message)),
                 },
                 message.encode("ascii")
             )
@@ -81,7 +79,6 @@ def main():
 
                 response = 201, {}, None
             elif os.path.exists(name):
-                size = os.stat(name).st_size
                 with open(name, "rb") as fd:
                     content = fd.read()
 
@@ -89,7 +86,6 @@ def main():
                     200,
                     {
                         "Content-Type": "application/octet-stream",
-                        "Content-Length": str(size),
                     },
                     content
                 )
@@ -97,13 +93,19 @@ def main():
                 response = 404, {}, None
         else:
             response = 404, {}, None
-
-        status, headers, body = response
+        
+        status, response_headers, body = response
         phrase = STATUS_PHRASES[status]
 
         client.send(f"HTTP/1.1 {status} {phrase}\r\n".encode("ascii"))
-        for key, value in headers.items():
+
+        for key, value in response_headers.items():
             client.send(f"{key}: {value}\r\n".encode("ascii"))
+
+        if body is not None:
+            size = len(body)
+            client.send(f"Content-Length: {size}\r\n".encode("ascii"))
+
         client.send(b"\r\n")
 
         if body is not None:
