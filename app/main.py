@@ -10,7 +10,8 @@ STATUS_PHRASES = {
 
 
 def gzip(input: bytes):
-    pass
+    import gzip
+    return gzip.compress(input)
 
 
 def main():
@@ -112,6 +113,7 @@ def main():
 
         if encoder is not None:
             response_headers["Content-Encoding"] = encoder.__name__
+            body = encoder(body)
 
         client.send(f"HTTP/1.1 {status} {phrase}\r\n".encode("ascii"))
 
