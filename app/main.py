@@ -9,6 +9,10 @@ STATUS_PHRASES = {
 }
 
 
+def gzip(input: bytes):
+    pass
+
+
 def main():
     print("codecrafters build-your-own-http")
 
@@ -93,9 +97,21 @@ def main():
                 response = 404, {}, None
         else:
             response = 404, {}, None
-        
+
         status, response_headers, body = response
         phrase = STATUS_PHRASES[status]
+
+        accept_encoding: str = headers.get("Accept-Encoding".lower(), "")
+        encoder = None
+        for name in accept_encoding.split(","):
+            name = name.strip()
+
+            if name == "gzip":
+                encoder = gzip
+                break
+
+        if encoder is not None:
+            response_headers["Content-Encoding"] = encoder.__name__
 
         client.send(f"HTTP/1.1 {status} {phrase}\r\n".encode("ascii"))
 
