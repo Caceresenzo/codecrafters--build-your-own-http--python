@@ -39,8 +39,12 @@ def gzip(input: bytes):
 def exchange(client: socket.socket):
     io = socket.SocketIO(client, "rw")
 
-    def parse_request() -> Request:
+    def parse_request() -> Request | None:
         request_line = io.readline()[:-2].decode("ascii")
+
+        if not len(request_line):
+            return None
+
         parts = request_line.split(" ")
         method, path, version = parts
 
@@ -154,6 +158,9 @@ def exchange(client: socket.socket):
 
     while True:
         request = parse_request()
+        if request is None:
+            break
+        
         response = route(request)
         response = compress(request, response)
         response, close_after = connection(request, response)
